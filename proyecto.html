@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programa de Actividades Semanal</title>
+    <style>
+        body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #808080; /* Gris medio */
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #1b1d1b;
+    margin-top: 20px;
+    font-size: 2.5em;
+}
+
+nav {
+    background-color: #515351;
+    padding: 15px;
+    color: white;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav li {
+    display: inline;
+    margin: 0 15px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+nav a:hover {
+    background-color: #eef3ef;
+}
+
+.schedule-container {
+    padding: 20px;
+    background-color: white;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 1200px;
+}
+
+h2 {
+    text-align: center;
+    color: #4CAF50;
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: #d3d3d3; /* Gris claro para el fondo de la tabla */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+    background-color: #f1f1f1; /* Gris muy claro para las celdas */
+}
+
+th {
+    background-color: #a9a9a9; /* Gris oscuro para los encabezados de las tablas */
+    color: white;
+    font-size: 1.1em;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+.shift-title {
+    font-size: 1.5em;
+    color: #333;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.btn-view {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #808080; /* Gris para los botones */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-view:hover {
+    background-color: #666666; /* Gris más oscuro para hover */
+}
+
+/* Animations */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.fadeIn {
+    animation: fadeIn 1s ease-in-out;
+}
+
+    </style>
+</head>
+<body>
+    <h1>Programa de Actividades Semanal</h1>
+    
+    <!-- Menú de Navegación -->
+    <nav>
+        <ul>
+            <li><a href="javascript:void(0)" onclick="showSchedule('main')">Ver Programa Semanal</a></li>
+            <li><a href="javascript:void(0)" onclick="showSchedule('worker')">Ver por Trabajador</a></li>
+            <li><a href="javascript:void(0)" onclick="showActivities()">Lista de Actividades</a></li>
+            <li><a href="javascript:void(0)" onclick="showWorkers()">Lista de Trabajadores</a></li>
+        </ul>
+    </nav>
+    
+    <div id="main-schedule" class="schedule-container fadeIn"></div>
+    
+    <script>
+        const workersMorning = [
+            "-Mario  ", "-Erick  ", "-Aldo", "-Jorge", "-Leo",
+            "Xochilt", "Lupe", "Daneli", "Sara", "Yohana"
+        ];
+        const workersEvening = [
+            "-Migue", "-Cristian", "-Josue", "-Armando", "-Angel",
+            "Mariana", "Karen", "Cristal", "Monse", "Dayra"
+        ];
+
+        
+
+        const activities = [
+            { name: "Limpieza de oficinas", duration: 1, gender: "any" },
+            { name: "Limpieza de espacios exteriores", duration: 1, gender: "any" },
+            { name: "Registro y archivo de correspondencia", duration: 1, gender: "any" },
+            { name: "Podar jardines", duration: 2, gender: "male" },
+            { name: "Podar árboles", duration: 2, gender: "male" },
+            { name: "Regar áreas verdes", duration: 2, gender: "any", timeRestriction: true },
+            { name: "Limpieza de sanitarios", duration: 3, gender: "any" },
+            { name: "Compras", duration: 3, gender: "any" },
+            { name: "Mantenimiento de vehículos", duration: 4, gender: "male" },
+            { name: "Mantenimiento eléctrico", duration: 4, gender: "male" },
+            { name: "Mantenimiento hidráulico", duration: 5, gender: "male" },
+            { name: "Mantenimiento de inmuebles", duration: 5, gender: "male" },
+            { name: "Mantenimiento de mobiliario", duration: 5, gender: "male" },
+            { name: "Control y registro", duration: 6, gender: "any", continuous: true }
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function assignActivities(workers, shift) {
+            const schedule = {};
+            workers.forEach(worker => {
+                let remainingHours = 6;
+                let assignedActivities = [];
+                let availableActivities = [...activities];
+
+                shuffleArray(availableActivities);
+
+                availableActivities.forEach(activity => {
+                    if (
+                        remainingHours >= activity.duration &&
+                        !assignedActivities.includes(activity.name) &&
+                        (activity.gender === "any" || (activity.gender === "male" && worker.startsWith("-"))) &&
+                        !(activity.timeRestriction && 
+                            ((shift === "morning" && activity.name === "Regar áreas verdes" && remainingHours < 2) ||
+                            (shift === "evening" && activity.name === "Regar áreas verdes" && remainingHours < 2))) &&
+                        !(activity.continuous && assignedActivities.includes("Control y registro"))
+                    ) {
+                        assignedActivities.push(activity.name);
+                        if (!schedule[worker]) schedule[worker] = [];
+                        schedule[worker].push({ activity: activity.name, hours: activity.duration });
+                        remainingHours -= activity.duration;
+                    }
+                });
+            });
+            return schedule;
+        }
+
+        function generateWeeklySchedule() {
+            const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            let mainSchedule = "";
+
+            days.forEach(day => {
+                const morningSchedule = assignActivities(workersMorning, "morning");
+                const eveningSchedule = assignActivities(workersEvening, "evening");
+
+                mainSchedule += `<h2>${day}</h2>`;
+                mainSchedule += generateTable(morningSchedule, "Matutino");
+                mainSchedule += generateTable(eveningSchedule, "Vespertino");
+            });
+
+            document.getElementById("main-schedule").innerHTML = mainSchedule;
+        }
+
+        function generateTable(schedule, shift) {
+            let table = `<h3 class="shift-title">Turno ${shift}</h3><table>`;
+            table += `<tr><th>Trabajador</th><th>Actividad</th><th>Duración (Horas)</th></tr>`;
+            Object.keys(schedule).forEach(worker => {
+                schedule[worker].forEach(entry => {
+                    table += `<tr><td>${worker}</td><td>${entry.activity}</td><td>${entry.hours}</td></tr>`;
+                });
+            });
+            table += `</table>`;
+            return table;
+        }
+
+        function openWorkerSchedule() {
+            const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const workerSchedules = {};
+
+            workersMorning.concat(workersEvening).forEach(worker => {
+                workerSchedules[worker] = [];
+            });
+
+            days.forEach(day => {
+                const morningSchedule = assignActivities(workersMorning, "morning");
+                const eveningSchedule = assignActivities(workersEvening, "evening");
+
+                Object.entries(morningSchedule).forEach(([worker, activities]) => {
+                    activities.forEach(activity => workerSchedules[worker].push({ day, shift: "Matutino", activity: activity.activity, hours: activity.hours }));
+                });
+
+                Object.entries(eveningSchedule).forEach(([worker, activities]) => {
+                    activities.forEach(activity => workerSchedules[worker].push({ day, shift: "Vespertino", activity: activity.activity, hours: activity.hours }));
+                });
+            });
+
+            let workerDetails = "";
+            Object.keys(workerSchedules).forEach(worker => {
+                workerDetails += `<h2>${worker}</h2><table>`;
+                workerSchedules[worker].forEach(entry => {
+                    workerDetails += `<tr><td>${entry.day}</td><td>${entry.shift}</td><td>${entry.activity}</td><td>${entry.hours}</td></tr>`;
+                });
+                workerDetails += `</table>`;
+            });
+
+            document.getElementById("main-schedule").innerHTML = workerDetails;
+        }
+
+         function showActivities() {
+            let activitiesHTML = "<h2>Lista de Actividades</h2><table>";
+            activities.forEach(activity => {
+                activitiesHTML += `<tr><td>${activity.name}</td><td>${activity.duration} horas</td><td>`;
+            });
+            activitiesHTML += "</table>";
+            document.getElementById("main-schedule").innerHTML = activitiesHTML;
+        }
+
+        function showWorkers() {
+            let workersHTML = "<h2>Lista de Trabajadores</h2><ul>";
+            workersMorning.concat(workersEvening).forEach(worker => {
+                workersHTML += `<li>${worker}</li>`;
+            });
+            workersHTML += "</ul>";
+            document.getElementById("main-schedule").innerHTML = workersHTML;
+        }
+
+        function showSchedule(view) {
+            if (view === 'main') {
+                generateWeeklySchedule();
+            } else {
+                openWorkerSchedule();
+            }
+        }
+
+        generateWeeklySchedule(); // Initial schedule display
+    </script>
+</body>
+</html>
